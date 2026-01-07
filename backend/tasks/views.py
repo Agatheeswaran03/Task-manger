@@ -75,7 +75,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         return context
     
     def create(self, request, *args, **kwargs):
-        """Create task with AI analysis if description provided"""
+        """Create task with non-blocking AI analysis"""
         try:
             ensure_mongodb_connection()
             
@@ -84,26 +84,18 @@ class TaskViewSet(viewsets.ModelViewSet):
             
             task_data = serializer.validated_data.copy()
             
-            # If description is provided, use AI to analyze
-            if task_data.get('description'):
-                try:
-                    ai_result = analyze_task(task_data['description'])
-                    task_data['urgency'] = ai_result['urgency']
-                    task_data['importance'] = ai_result['importance']
-                except Exception as ai_error:
-                    # If AI fails, use default values
-                    print(f"AI analysis failed: {str(ai_error)}")
-                    task_data['urgency'] = task_data.get('urgency', 2)
-                    task_data['importance'] = task_data.get('importance', 2)
+            # 1. Use default urgency/importance initially (Instant response)
+            task_data['urgency'] = task_data.get('urgency', 2)
+            task_data['importance'] = task_data.get('importance', 2)
             
-            # Calculate priority
+            # 2. Calculate initial priority
             quadrant = calculate_priority_quadrant(
-                task_data.get('urgency', 2),
-                task_data.get('importance', 2)
+                task_data['urgency'],
+                task_data['importance']
             )
             priority_score = calculate_priority_score(
-                task_data.get('urgency', 2),
-                task_data.get('importance', 2),
+                task_data['urgency'],
+                task_data['importance'],
                 quadrant
             )
             
@@ -111,16 +103,74 @@ class TaskViewSet(viewsets.ModelViewSet):
             task_data['priority_score'] = priority_score
             task_data['user_id'] = str(request.user.id)
             
-            # Create and save task
+            # 3. Create and save task immediately
             task = Task(**task_data)
             task.save()
             
-            # Broadcast to WebSocket
+            # 4. Broadcast creation event immediately
             try:
                 self._broadcast_task_update('created', task)
             except Exception as ws_error:
                 print(f"WebSocket broadcast failed: {str(ws_error)}")
             
+            # 5. Start background AI analysis if description exists
+            if task.description:
+                import threading
+                
+                def run_ai_analysis(task_id, description, user_id):
+                    try:
+                        # Re-connect to Mongo in this thread
+                        ensure_mongodb_connection()
+                        
+                        # Perform AI Analysis (Slow operation)
+                        ai_result = analyze_task(description)
+                        
+                        # Fetch task fresh from DB
+                        task = Task.objects.get(id=task_id)
+                        
+                        task.urgency = ai_result['urgency']
+                        task.importance = ai_result['importance']
+                        
+                        # Recalculate priority based on AI results
+                        task.priority_quadrant = calculate_priority_quadrant(task.urgency, task.importance)
+                        task.priority_score = calculate_priority_score(task.urgency, task.importance, task.priority_quadrant)
+                        
+                        task.save()
+                        
+                        # Broadcast update so UI refreshes automatically
+                        # We use channel layer directly to avoid viewset 'self' context issues in thread
+                        from channels.layers import get_channel_layer
+                        from asgiref.sync import async_to_sync
+                        from .serializers import TaskSerializer
+                        
+                        channel_layer = get_channel_layer()
+                        
+                        # Serialize the updated task
+                        serializer = TaskSerializer(task)
+                        task_dict = serializer.data
+                        
+                        async_to_sync(channel_layer.group_send)(
+                            f'user_{user_id}',
+                            {
+                                'type': 'task_update',
+                                'action': 'updated',
+                                'task': task_dict
+                            }
+                        )
+                        print(f"AI analysis completed for task {task_id}")
+                        
+                    except Exception as e:
+                        print(f"Background AI analysis failed: {str(e)}")
+
+                # Start the background thread
+                thread = threading.Thread(
+                    target=run_ai_analysis, 
+                    args=(str(task.id), task.description, str(request.user.id)),
+                    daemon=True
+                )
+                thread.start()
+            
+            # 6. Return response immediately
             response_serializer = self.get_serializer(task)
             headers = self.get_success_headers(response_serializer.data)
             return Response(response_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
