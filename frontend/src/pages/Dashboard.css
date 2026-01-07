@@ -1,0 +1,260 @@
+.dashboard {
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+.dashboard-header {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.app-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--pink-600);
+  margin: 0;
+}
+
+.app-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.username {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.logout-btn {
+  padding: 10px 20px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.logout-btn:hover {
+  background: var(--bg-hover);
+  transform: translateY(-1px);
+}
+
+.dashboard-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.dashboard-nav {
+  background: var(--card-bg);
+  border-bottom: 2px solid var(--border-color);
+  position: sticky;
+  top: 80px;
+  z-index: 50;
+}
+
+.nav-tabs {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.nav-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.nav-tabs::-webkit-scrollbar-track {
+  background: var(--secondary-bg);
+}
+
+.nav-tabs::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.nav-tab {
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  position: relative;
+}
+
+@media (max-width: 480px) {
+  .nav-tab {
+    padding: 12px 12px;
+    font-size: 13px;
+  }
+}
+
+.nav-tab:hover {
+  color: var(--text-primary);
+  border-bottom-color: var(--primary-light);
+}
+
+.nav-tab.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dashboard-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.create-task-btn {
+  padding: 14px 28px;
+  background: var(--primary-500);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+}
+
+.create-task-btn:hover {
+  background: var(--primary-600);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.task-form-container {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: 12px 0;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 var(--container-padding);
+    gap: 12px;
+  }
+
+  .header-left {
+    align-items: center;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .app-title {
+    font-size: 1.5rem;
+  }
+
+  .app-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .dashboard-main {
+    padding: 16px;
+  }
+
+  .dashboard-container {
+    max-width: 100%;
+    padding: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header {
+    padding: 12px 0;
+  }
+
+  .header-content {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .app-title {
+    font-size: 1.3rem;
+  }
+
+  .app-subtitle {
+    font-size: 0.75rem;
+  }
+
+  .header-right {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .dashboard-main {
+    padding: 12px;
+  }
+}

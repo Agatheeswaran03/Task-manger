@@ -1,0 +1,158 @@
+/* Agathees - Premium Soft Green Glass Theme */
+:root {
+  /* Soft Emerald/Sage Green Palette */
+  --primary-50: #ECFDF5;
+  --primary-100: #D1FAE5;
+  --primary-200: #A7F3D0;
+  --primary-300: #6EE7B7;
+  --primary-400: #34D399;
+  --primary-500: #10B981;
+  /* Main Emerald */
+  --primary-600: #059669;
+  --primary-700: #047857;
+
+  /* Text Colors */
+  --text-primary: #1F2937;
+  --text-secondary: #4B5563;
+  --text-muted: #9CA3AF;
+
+  /* Glassmorphism Variables */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  --backdrop-blur: blur(12px);
+
+  /* Background Colors */
+  --bg-primary: #F0Fdf4;
+  /* Very light mint background */
+  --bg-secondary: rgba(255, 255, 255, 0.8);
+  --card-bg: var(--glass-bg);
+  /* Cards are now glass by default */
+  --bg-hover: rgba(16, 185, 129, 0.1);
+
+  /* Border Colors */
+  --border-color: rgba(16, 185, 129, 0.15);
+  /* Subtle green border */
+
+  /* Priority/Status Colors - Keeping distinct functional colors but softening them */
+  --q1-color: #EF4444;
+  /* Soft Red */
+  --q2-color: #10B981;
+  /* Primary Green */
+  --q3-color: #F59E0B;
+  /* Amber */
+  --q4-color: #6B7280;
+  /* Cool Grey */
+
+  --status-pending: #F59E0B;
+  --status-in-progress: #3B82F6;
+  /* Blue for contrast */
+  --status-completed: #10B981;
+
+  /* Transitions */
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Aliases for compatibility */
+  --primary-color: var(--primary-500);
+  --primary-light: var(--primary-100);
+  --primary-dark: var(--primary-700);
+
+  /* Responsive Spacing */
+  --container-padding: 24px;
+  --section-gap: 32px;
+  --card-padding: 24px;
+  --font-scale: 1;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --container-padding: 16px;
+    --section-gap: 24px;
+    --card-padding: 16px;
+    --font-scale: 0.95;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --container-padding: 12px;
+    --section-gap: 20px;
+    --card-padding: 12px;
+    --font-scale: 0.9;
+  }
+}
+
+/* Dark Mode - Deep Forest Glass */
+[data-theme="dark"] {
+  --text-primary: #F9FAFB;
+  --text-secondary: #D1D5DB;
+  --text-muted: #9CA3AF;
+
+  --glass-bg: rgba(17, 24, 39, 0.7);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+
+  --bg-primary: #022c22;
+  /* Deep forest green */
+  --card-bg: var(--glass-bg);
+  --bg-hover: rgba(255, 255, 255, 0.05);
+
+  --border-color: rgba(255, 255, 255, 0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(245, 158, 11, 0.05) 0px, transparent 50%),
+    var(--bg-primary);
+  background-attachment: fixed;
+  /* Parallax-like fixed background */
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* Glass Card Utility */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Override card backgrounds to use glass variable */
+.stat-card,
+.daily-tasks-container,
+.month-tracker-container,
+.dashboard-content,
+.form-section,
+.status-group,
+.day-details,
+.month-summary {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--backdrop-blur) !important;
+  -webkit-backdrop-filter: var(--backdrop-blur) !important;
+  border: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  padding: var(--card-padding) !important;
+}
+
+/* Buttons */
+button {
+  font-family: inherit;
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
