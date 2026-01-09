@@ -7,45 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # MongoDB connection flag
-_mongodb_connected = False
-
-def ensure_mongodb_connection():
-    """Ensure MongoDB connection is established - Persistent"""
-    global _mongodb_connected
-    try:
-        # Check if already connected by attempting a lightweight operation
-        # This is better than just checking a flag which might be stale
-        from mongoengine.connection import get_connection
-        try:
-            get_connection('default')
-            _mongodb_connected = True
-            return
-        except Exception:
-            # Not connected, proceed to connect
-            pass
-
-        # Check if using URI (MongoDB Atlas) or individual settings
-        if 'host' in settings.MONGODB_SETTINGS and settings.MONGODB_SETTINGS['host'].startswith('mongodb'):
-            # URI-based connection (MongoDB Atlas)
-            connect(host=settings.MONGODB_SETTINGS['host'], alias='default')
-        else:
-            # Individual settings connection (local MongoDB)
-            connect(
-                db=settings.MONGODB_SETTINGS.get('db', 'agathees_db'),
-                host=settings.MONGODB_SETTINGS.get('host', 'localhost'),
-                port=settings.MONGODB_SETTINGS.get('port', 27017),
-                username=settings.MONGODB_SETTINGS.get('username') or None,
-                password=settings.MONGODB_SETTINGS.get('password') or None,
-                alias='default'
-            )
-        _mongodb_connected = True
-        logger.info("MongoDB connected successfully")
-    except Exception as e:
-        logger.error(f"Failed to connect to MongoDB: {str(e)}")
-        _mongodb_connected = False
-        # Raise the error so we can handle it properly
-        raise ConnectionError(f"MongoDB connection failed: {str(e)}. Please ensure MongoDB is running.")
-
+# MongoDB connection handled in apps.py via mongoengine.connect
 
 class Task(Document):
     """Task model for MongoDB"""
@@ -79,8 +41,7 @@ class Task(Document):
     }
     
     def save(self, *args, **kwargs):
-        """Override save to update updated_at and ensure connection"""
-        ensure_mongodb_connection()
+        """Override save to update updated_at"""
         self.updated_at = datetime.utcnow()
         return super(Task, self).save(*args, **kwargs)
     

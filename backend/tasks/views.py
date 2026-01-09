@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import Task, ensure_mongodb_connection
+from .models import Task
 from .serializers import TaskSerializer
 from .ai_service import analyze_task
 from .priority_calculator import calculate_priority_quadrant, calculate_priority_score
@@ -100,9 +100,6 @@ class TaskViewSet(viewsets.ModelViewSet):
                 
                 def run_ai_analysis(task_id, description, user_id):
                     try:
-                        # Re-connect to Mongo in this thread
-                        ensure_mongodb_connection()
-                        
                         # Perform AI Analysis (Slow operation)
                         ai_result = analyze_task(description)
                         
