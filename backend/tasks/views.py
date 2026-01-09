@@ -455,3 +455,29 @@ class TaskViewSet(viewsets.ModelViewSet):
             })
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['get'], permission_classes=[])
+    def health_check(self, request):
+        """Diagnose database connection"""
+        status_data = {
+            "status": "checking",
+            "mongodb_connected": False,
+            "error": None
+        }
+        try:
+            from mongoengine.connection import get_connection
+            # 1. Check if connection object exists
+            conn = get_connection('default')
+            
+            # 2. Try actual command
+            conn.admin.command('ping')
+            
+            status_data["status"] = "ok"
+            status_data["mongodb_connected"] = True
+            return Response(status_data)
+        except Exception as e:
+            import traceback
+            status_data["status"] = "error"
+            status_data["error"] = str(e)
+            status_data["traceback"] = traceback.format_exc()
+            return Response(status_data, status=status.HTTP_503_SERVICE_UNAVAILABLE)
