@@ -76,27 +76,17 @@ class TaskViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         """Create task with non-blocking AI analysis"""
-        print(f"DEBUG: Create Task Request Data: {request.data}")
         try:
             ensure_mongodb_connection()
             
             serializer = self.get_serializer(data=request.data)
-            if not serializer.is_valid():
-                print(f"DEBUG: Serializer Validation Errors: {serializer.errors}")
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.is_valid(raise_exception=True)
             
             # Use serializer.save() which handles:
             # 1. Setting user_id from context['request']
             # 2. Calculating initial priority based on provided/default urgency & importance
             # 3. Saving to MongoDB
-            try:
-                task = serializer.save()
-                print(f"DEBUG: Task created successfully: {task.id}")
-            except Exception as save_error:
-                print(f"DEBUG: Error saving task: {save_error}")
-                import traceback
-                print(traceback.format_exc())
-                raise save_error
+            task = serializer.save()
             
             # Broadcast creation event immediately
             try:
