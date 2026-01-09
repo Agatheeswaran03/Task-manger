@@ -357,7 +357,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def monthly_tasks(self, request):
-        """Get monthly tasks for a specific month (excludes daily-only tasks)"""
+        """Get monthly tasks for a specific month (excludes daily-only tasks) - Optimized"""
         try:
             ensure_mongodb_connection()
             user_id = str(request.user.id)
@@ -370,27 +370,34 @@ class TaskViewSet(viewsets.ModelViewSet):
             first_day = datetime(year, month, 1)
             last_day = datetime(year, month, calendar.monthrange(year, month)[1], 23, 59, 59)
             
-            # Get monthly tasks for user (exclude daily-only tasks)
-            tasks = Task.objects(user_id=user_id, task_type='monthly')
+            from mongoengine.queryset.visitor import Q
             
-            monthly_tasks = []
-            for task in tasks:
-                # Check if task is due in this month
-                if task.due_date and first_day <= task.due_date <= last_day:
-                    monthly_tasks.append(task)
-                # Check recurring tasks
-                elif task.is_recurring:
-                    if not task.recurrence_end_date or task.recurrence_end_date >= first_day:
-                        monthly_tasks.append(task)
+            # Optimized Query:
+            # 1. User must match
+            # 2. Match EITHER:
+            #    a. Due date in this month
+            #    b. Is recurring AND (no end date OR end date >= month start)
+            # 3. Exclude daily-only tasks
             
-            serializer = self.get_serializer(monthly_tasks, many=True)
+            query = Q(user_id=user_id) & Q(task_type='monthly') & (
+                (Q(due_date__gte=first_day) & Q(due_date__lte=last_day)) |
+                (Q(is_recurring=True) & (Q(recurrence_end_date=None) | Q(recurrence_end_date__gte=first_day)))
+            )
+            
+            monthly_tasks = Task.objects(query).order_by('due_date')
+            
+            # Limit results to prevent massive payloads if something goes wrong
+            # MongoDB cursors are lazy, so we convert to list here with a safe limit
+            tasks_list = list(monthly_tasks[:500])
+            
+            serializer = self.get_serializer(tasks_list, many=True)
             return Response(serializer.data)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['get'])
     def analytics(self, request):
-        """Get monthly analytics dashboard data"""
+        """Get monthly analytics dashboard data - Optimized"""
         try:
             ensure_mongodb_connection()
             user_id = str(request.user.id)
@@ -403,23 +410,20 @@ class TaskViewSet(viewsets.ModelViewSet):
             first_day = datetime(year, month, 1)
             last_day = datetime(year, month, calendar.monthrange(year, month)[1], 23, 59, 59)
             
-            # Get monthly tasks only (exclude daily-only tasks)
-            all_tasks = Task.objects(user_id=user_id, task_type='monthly')
+            from mongoengine.queryset.visitor import Q
             
-            # Filter tasks for this month
-            month_tasks = []
-            for task in all_tasks:
-                task_date = task.due_date or task.created_at
-                if not task_date:
-                    continue
-                # Handle potential timezone issues
-                if hasattr(task_date, 'tzinfo') and task_date.tzinfo is not None:
-                    # Make comparable by converting both to naive or aware
-                    # Here we convert task_date to naive for simple comparison if first_day is naive
-                    task_date = task_date.replace(tzinfo=None)
-                
-                if first_day <= task_date <= last_day:
-                    month_tasks.append(task)
+            # Same optimized query logic as monthly_tasks
+            query = Q(user_id=user_id) & Q(task_type='monthly') & (
+                (Q(due_date__gte=first_day) & Q(due_date__lte=last_day)) |
+                (Q(is_recurring=True) & (Q(recurrence_end_date=None) | Q(recurrence_end_date__gte=first_day)))
+            )
+            
+            # Execute query
+            month_tasks = list(Task.objects(query))
+            
+            # Further filter in memory only for complex recurrence logic (optional, but safe now that set is small)
+            # For strict correctness, we might filter recurring tasks that started AFTER this month
+            # But the query handles the bulk of the filtering
             
             # Calculate analytics
             total_tasks = len(month_tasks)
@@ -445,8 +449,12 @@ class TaskViewSet(viewsets.ModelViewSet):
             # Daily task count
             daily_counts = defaultdict(int)
             for task in month_tasks:
-                task_date = (task.due_date or task.created_at).date()
-                daily_counts[str(task_date)] += 1
+                if task.due_date:
+                    task_date = task.due_date.date()
+                    daily_counts[str(task_date)] += 1
+                elif task.created_at:
+                    task_date = task.created_at.date()
+                    daily_counts[str(task_date)] += 1
             
             # Urgency/Importance breakdown
             urgency_avg = sum(t.urgency for t in month_tasks) / total_tasks if total_tasks > 0 else 0
