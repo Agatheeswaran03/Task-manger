@@ -82,38 +82,19 @@ class TaskViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
-            task_data = serializer.validated_data.copy()
+            # Use serializer.save() which handles:
+            # 1. Setting user_id from context['request']
+            # 2. Calculating initial priority based on provided/default urgency & importance
+            # 3. Saving to MongoDB
+            task = serializer.save()
             
-            # 1. Use default urgency/importance initially (Instant response)
-            task_data['urgency'] = task_data.get('urgency', 2)
-            task_data['importance'] = task_data.get('importance', 2)
-            
-            # 2. Calculate initial priority
-            quadrant = calculate_priority_quadrant(
-                task_data['urgency'],
-                task_data['importance']
-            )
-            priority_score = calculate_priority_score(
-                task_data['urgency'],
-                task_data['importance'],
-                quadrant
-            )
-            
-            task_data['priority_quadrant'] = quadrant
-            task_data['priority_score'] = priority_score
-            task_data['user_id'] = str(request.user.id)
-            
-            # 3. Create and save task immediately
-            task = Task(**task_data)
-            task.save()
-            
-            # 4. Broadcast creation event immediately
+            # Broadcast creation event immediately
             try:
                 self._broadcast_task_update('created', task)
             except Exception as ws_error:
                 print(f"WebSocket broadcast failed: {str(ws_error)}")
             
-            # 5. Start background AI analysis if description exists
+            # Start background AI analysis if description exists
             if task.description:
                 import threading
                 
@@ -170,7 +151,6 @@ class TaskViewSet(viewsets.ModelViewSet):
                 )
                 thread.start()
             
-            # 6. Return response immediately
             response_serializer = self.get_serializer(task)
             headers = self.get_success_headers(response_serializer.data)
             return Response(response_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
