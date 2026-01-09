@@ -10,37 +10,41 @@ logger = logging.getLogger(__name__)
 _mongodb_connected = False
 
 def ensure_mongodb_connection():
-    """Ensure MongoDB connection is established"""
+    """Ensure MongoDB connection is established - Persistent"""
     global _mongodb_connected
-    if not _mongodb_connected:
+    try:
+        # Check if already connected by attempting a lightweight operation
+        # This is better than just checking a flag which might be stale
+        from mongoengine.connection import get_connection
         try:
-            # Disconnect first if already connected
-            try:
-                disconnect(alias='default')
-            except:
-                pass
-            
-            # Check if using URI (MongoDB Atlas) or individual settings
-            if 'host' in settings.MONGODB_SETTINGS and settings.MONGODB_SETTINGS['host'].startswith('mongodb'):
-                # URI-based connection (MongoDB Atlas)
-                connect(host=settings.MONGODB_SETTINGS['host'], alias='default')
-            else:
-                # Individual settings connection (local MongoDB)
-                connect(
-                    db=settings.MONGODB_SETTINGS.get('db', 'agathees_db'),
-                    host=settings.MONGODB_SETTINGS.get('host', 'localhost'),
-                    port=settings.MONGODB_SETTINGS.get('port', 27017),
-                    username=settings.MONGODB_SETTINGS.get('username') or None,
-                    password=settings.MONGODB_SETTINGS.get('password') or None,
-                    alias='default'
-                )
+            get_connection('default')
             _mongodb_connected = True
-            logger.info("MongoDB connected successfully")
-        except Exception as e:
-            logger.error(f"Failed to connect to MongoDB: {str(e)}")
-            _mongodb_connected = False
-            # Raise the error so we can handle it properly
-            raise ConnectionError(f"MongoDB connection failed: {str(e)}. Please ensure MongoDB is running.")
+            return
+        except Exception:
+            # Not connected, proceed to connect
+            pass
+
+        # Check if using URI (MongoDB Atlas) or individual settings
+        if 'host' in settings.MONGODB_SETTINGS and settings.MONGODB_SETTINGS['host'].startswith('mongodb'):
+            # URI-based connection (MongoDB Atlas)
+            connect(host=settings.MONGODB_SETTINGS['host'], alias='default')
+        else:
+            # Individual settings connection (local MongoDB)
+            connect(
+                db=settings.MONGODB_SETTINGS.get('db', 'agathees_db'),
+                host=settings.MONGODB_SETTINGS.get('host', 'localhost'),
+                port=settings.MONGODB_SETTINGS.get('port', 27017),
+                username=settings.MONGODB_SETTINGS.get('username') or None,
+                password=settings.MONGODB_SETTINGS.get('password') or None,
+                alias='default'
+            )
+        _mongodb_connected = True
+        logger.info("MongoDB connected successfully")
+    except Exception as e:
+        logger.error(f"Failed to connect to MongoDB: {str(e)}")
+        _mongodb_connected = False
+        # Raise the error so we can handle it properly
+        raise ConnectionError(f"MongoDB connection failed: {str(e)}. Please ensure MongoDB is running.")
 
 
 class Task(Document):
