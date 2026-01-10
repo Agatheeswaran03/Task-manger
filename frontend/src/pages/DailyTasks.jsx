@@ -67,7 +67,8 @@ const DailyTasks = () => {
   const handleCreateTask = async (taskData) => {
     try {
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // Set to NOON (12:00) to ensure UTC timestamp stays in the same day (avoiding timezone shift to previous day)
+      today.setHours(12, 0, 0, 0);
       await createTask.mutateAsync({
         ...taskData,
         task_type: 'daily',  // Mark as daily-only task
