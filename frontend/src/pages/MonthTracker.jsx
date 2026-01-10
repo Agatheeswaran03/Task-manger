@@ -265,15 +265,40 @@ const MonthTracker = () => {
                 </div>
               ) : (
                 <div className="day-tasks-list">
-                  {dayTasks.map((task) => (
-                    <div key={task.id} className="month-task-item">
-                      <TaskItem
-                        task={task}
-                        onUpdate={(id, data) => updateTask.mutate({ id, data })}
-                        onDelete={(id) => deleteTask.mutate(id)}
-                      />
-                    </div>
-                  ))}
+                  {dayTasks.map((task) => {
+                    // Check completion for this specific day
+                    const dateStr = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+
+                    // effectiveStatus logic:
+                    // 1. If recurring: check if date is in completed_dates
+                    // 2. If not recurring: use global status
+                    const isCompletedToday = task.is_recurring && task.completed_dates?.includes(dateStr);
+                    const effectiveStatus = task.is_recurring
+                      ? (isCompletedToday ? 'completed' : 'pending')
+                      : task.status;
+
+                    // Create a display task object
+                    const displayTask = {
+                      ...task,
+                      status: effectiveStatus
+                    };
+
+                    return (
+                      <div key={task.id} className="month-task-item">
+                        <TaskItem
+                          task={displayTask}
+                          onUpdate={(id, data) => {
+                            // Inject completion_date for recurring tasks
+                            if (task.is_recurring) {
+                              data.completion_date = dateStr;
+                            }
+                            updateTask.mutate({ id, data });
+                          }}
+                          onDelete={(id) => deleteTask.mutate(id)}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
