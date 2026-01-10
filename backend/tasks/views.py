@@ -171,8 +171,35 @@ class TaskViewSet(viewsets.ModelViewSet):
             partial = kwargs.pop('partial', False)
             instance = self.get_object()
             
-            # Fast path: if only status is being updated, skip serializer validation overhead
+            # Handle recurring task daily completion
             update_data = request.data
+            completion_date = update_data.get('completion_date')
+            
+            if instance.is_recurring and completion_date:
+                current_status = update_data.get('status')
+                
+                if current_status == 'completed':
+                    # Add date to completed_dates if not present
+                    if completion_date not in instance.completed_dates:
+                        instance.completed_dates.append(completion_date)
+                elif current_status in ['pending', 'in_progress']:
+                    # Remove date if un-completing
+                    if completion_date in instance.completed_dates:
+                        instance.completed_dates.remove(completion_date)
+                
+                instance.save()
+                
+                # Broadcast update
+                try:
+                    self._broadcast_task_update('updated', instance)
+                except:
+                    pass
+                    
+                response_serializer = self.get_serializer(instance)
+                return Response(response_serializer.data)
+
+            # Fast path: if only status is being updated, skip serializer validation overhead
+
             if partial and len(update_data) == 1 and 'status' in update_data:
                 # Direct status update - fastest path
                 instance.status = update_data['status']
