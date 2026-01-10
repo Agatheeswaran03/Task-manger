@@ -22,14 +22,12 @@ class TaskViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """Get tasks for the current user"""
-        ensure_mongodb_connection()
         user_id = str(self.request.user.id)
         return Task.objects(user_id=user_id).order_by('-priority_score', '-created_at')
     
     def list(self, request, *args, **kwargs):
         """List all tasks for the current user"""
         try:
-            ensure_mongodb_connection()
             user_id = str(request.user.id)
             tasks_queryset = Task.objects(user_id=user_id).order_by('-priority_score', '-created_at')
             # Convert MongoDB queryset to list
@@ -46,7 +44,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         """Retrieve a single task"""
         try:
-            ensure_mongodb_connection()
             pk = kwargs.get('pk')
             user_id = str(request.user.id)
             task = Task.objects.get(id=pk, user_id=user_id)
@@ -59,7 +56,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     
     def get_object(self):
         """Get a single task object"""
-        ensure_mongodb_connection()
         pk = self.kwargs.get('pk')
         user_id = str(self.request.user.id)
         try:
@@ -77,8 +73,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """Create task with non-blocking AI analysis"""
         try:
-            ensure_mongodb_connection()
-            
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
@@ -174,7 +168,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         """Update task and broadcast changes - optimized for speed"""
         try:
-            ensure_mongodb_connection()
             partial = kwargs.pop('partial', False)
             instance = self.get_object()
             
@@ -314,7 +307,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     def daily_tasks(self, request):
         """Get daily-only tasks for today (tasks not in monthly tracking)"""
         try:
-            ensure_mongodb_connection()
             user_id = str(request.user.id)
             today = datetime.now().date()
             
@@ -336,7 +328,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     def monthly_tasks(self, request):
         """Get monthly tasks for a specific month (excludes daily-only tasks) - Optimized"""
         try:
-            ensure_mongodb_connection()
             user_id = str(request.user.id)
             
             # Get month and year from query params (default to current month)
@@ -376,7 +367,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     def analytics(self, request):
         """Get monthly analytics dashboard data - Optimized"""
         try:
-            ensure_mongodb_connection()
             user_id = str(request.user.id)
             
             # Get month and year from query params
