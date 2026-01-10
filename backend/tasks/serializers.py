@@ -113,7 +113,9 @@ class TaskSerializer(serializers.Serializer):
             'recurrence_end_date': instance.recurrence_end_date.isoformat() if instance.recurrence_end_date else None,
             'due_date': instance.due_date.isoformat() if instance.due_date else None,
             'due_time': instance.due_time,
+            'due_time': instance.due_time,
             'parent_task_id': str(instance.parent_task_id) if instance.parent_task_id else None,
+            'completed_dates': instance.completed_dates or [],
         }
         return data
 
