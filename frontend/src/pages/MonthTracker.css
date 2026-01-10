@@ -344,3 +344,46 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 480px) {
+  .month-tracker-container {
+    padding: 12px;
+  }
+
+  .month-stats-bar {
+    grid-template-columns: 1fr;
+    /* Stack stats vertically on small phones */
+    gap: 12px;
+  }
+
+  .stat-item {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+  }
+
+  .stat-header-flex {
+    margin-bottom: 0;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+    margin-top: 0;
+    order: 2;
+  }
+
+  .stat-header-flex {
+    order: 1;
+  }
+
+  .tracker-title h1 {
+    font-size: 20px;
+  }
+
+  .tracker-title p {
+    font-size: 14px;
+  }
+}

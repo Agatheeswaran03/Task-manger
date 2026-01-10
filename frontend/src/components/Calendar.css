@@ -256,3 +256,52 @@
     padding: 12px;
   }
 }
+
+@media (max-width: 480px) {
+  .calendar-container {
+    padding: 12px;
+    margin: 10px 0;
+  }
+
+  .calendar-day {
+    min-height: 50px;
+    /* Smaller height for phones */
+    padding: 2px;
+    border-radius: 6px;
+  }
+
+  .day-number {
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+
+  .weekday {
+    font-size: 12px;
+    padding: 8px 0;
+  }
+
+  .calendar-header {
+    gap: 16px;
+  }
+
+  .calendar-month-year h2 {
+    font-size: 18px;
+  }
+
+  .calendar-month-year {
+    order: -1;
+    /* Put Month/Year on top */
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .calendar-nav-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .task-dot {
+    width: 6px;
+    height: 6px;
+  }
+}
