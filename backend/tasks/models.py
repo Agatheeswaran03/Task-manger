@@ -33,6 +33,7 @@ class Task(Document):
     due_date = DateTimeField(default=None)  # Due date for the task
     due_time = StringField(default=None)  # Due time in HH:MM format
     parent_task_id = StringField(default=None)  # For generated instances of recurring tasks
+    completed_dates = ListField(StringField(), default=list)  # ISO dates (YYYY-MM-DD) for completion logic in recurring tasks
     
     meta = {
         'collection': 'tasks',
