@@ -129,7 +129,7 @@ const MonthTracker = () => {
       setRecurringMode(false);
     } catch (error) {
       console.error('Error creating task:', error);
-      alert('Failed to create task');
+      alert(`Error happened: ${JSON.stringify(error.response?.data || error.message)}`);
     }
   };
 

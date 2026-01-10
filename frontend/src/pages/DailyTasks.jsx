@@ -76,7 +76,8 @@ const DailyTasks = () => {
       setShowForm(false);
     } catch (error) {
       console.error('Error creating task:', error);
-      alert('Failed to create task');
+      const errorMsg = error.response?.data?.error || error.message || 'Failed to create task';
+      alert(`Error happened: ${JSON.stringify(error.response?.data || error.message)}`);
     }
   };
 
