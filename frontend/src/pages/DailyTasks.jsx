@@ -202,15 +202,41 @@ const DailyTasks = () => {
                     {statusConfig[status].label}
                   </h3>
                   <div className="tasks-group">
-                    {statusTasks.map((task) => (
-                      <div key={task.id} className="daily-task-item">
-                        <TaskItem
-                          task={task}
-                          onUpdate={handleUpdateTask}
-                          onDelete={handleDeleteTask}
-                        />
-                      </div>
-                    ))}
+                    {statusTasks.map((task) => {
+                      // Calculate effective status for recurring tasks
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      const isCompletedToday = task.is_recurring && task.completed_dates?.includes(todayStr);
+
+                      const effectiveStatus = task.is_recurring
+                        ? (isCompletedToday ? 'completed' : 'pending')
+                        : task.status;
+
+                      const displayTask = {
+                        ...task,
+                        status: effectiveStatus
+                      };
+
+                      return (
+                        <div key={task.id} className="daily-task-item">
+                          <TaskItem
+                            task={displayTask}
+                            onUpdate={(id, data) => {
+                              if (task.is_recurring) {
+                                // If marking as completed, add today's date
+                                if (data.status === 'completed') {
+                                  data.completion_date = todayStr;
+                                } else {
+                                  // If marking as pending (unchecking), we rely on backend to remove the date
+                                  data.completion_date = null; // Explicitly set to null to remove
+                                }
+                              }
+                              handleUpdateTask(id, data);
+                            }}
+                            onDelete={() => handleDeleteTask(task.id)}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
